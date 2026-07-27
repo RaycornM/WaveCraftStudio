@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* shadcn/ui 深色主题变量（bg-primary / bg-muted / border-input 等全部依赖这些变量） */
+  :root {
+    --background: 0 0% 2%;
+    --foreground: 0 0% 92%;
+    --card: 240 3% 7%;
+    --card-foreground: 0 0% 92%;
+    --popover: 240 3% 7%;
+    --popover-foreground: 0 0% 92%;
+    --primary: 72 98% 66%; /* #D3FD50 青柠绿强调色 */
+    --primary-foreground: 0 0% 4%;
+    --secondary: 240 3% 12%;
+    --secondary-foreground: 0 0% 92%;
+    --muted: 240 3% 12%;
+    --muted-foreground: 240 2% 55%;
+    --accent: 240 3% 14%;
+    --accent-foreground: 0 0% 92%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 100% / 0.08;
+    --input: 0 0% 100% / 0.14;
+    --ring: 72 98% 66%;
+    --radius: 0.625rem;
+    --sidebar-background: 240 3% 7%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 72 98% 66%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 240 3% 14%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 0 0% 100% / 0.08;
+    --sidebar-ring: 72 98% 66%;
+  }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: #050505;
+  }
+
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    color: #ebebeb;
+    -webkit-font-smoothing: antialiased;
+    /* 中文不使用斜体 */
+    font-style: normal;
+  }
+
+  em,
+  i {
+    font-style: normal;
+  }
+
+  /* 深色滚动条 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* 统一交互过渡时长 0.2s（覆盖 Tailwind 默认 150ms） */
+  .transition-colors,
+  .transition-opacity,
+  .transition-all {
+    transition-duration: 200ms;
+  }
+
+  /* 底部播放条：手柄默认隐藏，hover 整条滑轨时显现 */
+  .transport-slider [data-slot='slider-thumb'] {
+    opacity: 0;
+    transition: opacity 200ms;
+  }
+  .transport-slider:hover [data-slot='slider-thumb'],
+  .transport-slider [data-slot='slider-thumb']:focus-visible {
+    opacity: 1;
+  }
+}
