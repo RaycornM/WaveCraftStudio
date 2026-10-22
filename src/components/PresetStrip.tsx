@@ -1,32 +1,9 @@
 // 预设横向缩略图条：小 canvas 实时绘制（伪音频数据驱动），点击切换预设
 import { useEffect, useRef } from 'react';
 import { renderFrame } from '@/render/renderer';
+import { fakeFrame } from '@/render/fakeFrame';
 import { BUILTIN_PRESETS } from '@/state/presets';
 import { useStore } from '@/state/store';
-import type { AudioFrameData } from '@/types';
-
-/** 生成伪音频帧（正弦组合 + 假节拍），让缩略图动起来 */
-function fakeFrame(t: number): AudioFrameData {
-  const n = 512;
-  const spectrum = new Float32Array(n);
-  for (let i = 0; i < n; i++) {
-    const x = i / n;
-    spectrum[i] =
-      0.55 * Math.exp(-x * 5) * (0.6 + 0.4 * Math.sin(t * 2.1 + x * 9)) +
-      0.25 * Math.abs(Math.sin(x * 22 + t * 3.3));
-  }
-  const beatPhase = t % 0.85;
-  const beat = Math.exp(-beatPhase * 6);
-  return {
-    t,
-    spectrum,
-    bass: 0.5 + 0.4 * Math.sin(t * 1.7),
-    mid: 0.4 + 0.3 * Math.sin(t * 2.3 + 1),
-    high: 0.3 + 0.25 * Math.sin(t * 3.1 + 2),
-    level: 0.45,
-    beat,
-  };
-}
 
 export function PresetStrip() {
   const activePreset = useStore((s) => s.config.preset);

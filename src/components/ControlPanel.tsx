@@ -4,6 +4,7 @@ import { ChevronDown, Download, Save, Trash2, Upload } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { PresetStrip } from './PresetStrip';
+import { ThemeGrid } from './ThemeGrid';
 import { ExportDialog } from './ExportDialog';
 import { LAYOUT_LIST } from '@/render/layouts';
 import { useStore } from '@/state/store';
@@ -386,7 +387,12 @@ export function ControlPanel() {
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         <Section title="样式预设" defaultOpen>
-          <PresetStrip />
+          <span className="text-[10px] tracking-[0.12em] text-[#8a8a93]">主题套装</span>
+          <ThemeGrid />
+          <div className="border-t border-white/[0.08] pt-3">
+            <span className="mb-2 block text-[10px] tracking-[0.12em] text-[#8a8a93]">频谱风格</span>
+            <PresetStrip />
+          </div>
           <CustomPresets />
         </Section>
 

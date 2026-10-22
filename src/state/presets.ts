@@ -120,6 +120,145 @@ export const BUILTIN_PRESETS: NamedPreset[] = [
   },
 ];
 
+/* ---------- 主题套装：频谱 + 配色 + 标题 + 专辑图 + 背景的一整套风格 ---------- */
+
+export type ThemeCategory = '华丽' | '简约' | '科技' | '高级';
+
+export interface ThemePack {
+  id: string;
+  name: string;
+  category: ThemeCategory;
+  config: VisualConfig;
+}
+
+export const THEME_PACKS: ThemePack[] = [
+  // ── 华丽 ──
+  {
+    id: 'theme-neon',
+    name: '霓虹派对',
+    category: '华丽',
+    config: makeBuiltin(
+      'particles',
+      { barCount: 48, lineWidth: 4, glow: 0.85, colorPrimary: '#FF4ECD', colorSecondary: '#7A5CFF' },
+      {
+        fx: { enabled: true, particleCount: 120, particleColor: '#FFD166', particleIntensity: 0.8, haloIntensity: 0.7, haloColor: '#FF4ECD' },
+        title: { ...DEFAULT_CONFIG.title, font: 'handwriting', color: '#FFFFFF', fontSize: 0.05, position: 'center' },
+        albumArt: { ...DEFAULT_CONFIG.albumArt, shape: 'circle', spin: true, spinPeriod: 10, borderColor: '#FF4ECD', shadow: 0.7 },
+        bg: { blur: 0.7, brightness: 0.5, saturation: 1.3, vignette: 0.55 },
+      },
+    ),
+  },
+  {
+    id: 'theme-gilded',
+    name: '鎏金',
+    category: '华丽',
+    config: makeBuiltin(
+      'bars',
+      { barCount: 72, mirror: true, glow: 0.8, roundness: 0.6, colorPrimary: '#FFD166', colorSecondary: '#FF7A1A' },
+      {
+        fx: { enabled: true, particleCount: 80, particleColor: '#FFD166', particleIntensity: 0.6, haloIntensity: 0.5, haloColor: '#FFB347' },
+        title: { ...DEFAULT_CONFIG.title, font: 'serif', color: '#FFE8B3', position: 'bottom' },
+        albumArt: { ...DEFAULT_CONFIG.albumArt, shape: 'rounded', cornerRadius: 0.08, borderColor: '#FFD166', shadow: 0.7 },
+        bg: { blur: 0.6, brightness: 0.5, saturation: 1.2, vignette: 0.6 },
+      },
+    ),
+  },
+  // ── 简约 ──
+  {
+    id: 'theme-blanc',
+    name: '素白',
+    category: '简约',
+    config: makeBuiltin(
+      'waveform',
+      { barCount: 96, lineWidth: 2.5, mirror: true, smoothing: 0.8, glow: 0.15, colorPrimary: '#EDEDED', colorSecondary: '#8A8A93' },
+      {
+        fx: { ...DEFAULT_CONFIG.fx, enabled: false },
+        title: { ...DEFAULT_CONFIG.title, font: 'sans', color: '#EBEBEB', fontSize: 0.038, position: 'bottom' },
+        albumArt: { ...DEFAULT_CONFIG.albumArt, shape: 'square', beatPulse: false, borderColor: '#FFFFFF', shadow: 0.3 },
+        bg: { blur: 0.3, brightness: 0.45, saturation: 0.6, vignette: 0.35 },
+      },
+    ),
+  },
+  {
+    id: 'theme-mist',
+    name: '薄雾',
+    category: '简约',
+    config: makeBuiltin(
+      'bars',
+      { barCount: 32, roundness: 1, mirror: false, glow: 0.3, colorPrimary: '#A8B2C1', colorSecondary: '#5B6472' },
+      {
+        fx: { enabled: true, particleCount: 0, particleColor: '#A8B2C1', particleIntensity: 0, haloIntensity: 0.4, haloColor: '#A8B2C1' },
+        title: { ...DEFAULT_CONFIG.title, font: 'sans', color: '#C9D1DC', fontSize: 0.034, position: 'bottom' },
+        albumArt: { ...DEFAULT_CONFIG.albumArt, shape: 'rounded', cornerRadius: 0.12, shadow: 0.4, border: false },
+        bg: { blur: 0.85, brightness: 0.5, saturation: 0.8, vignette: 0.4 },
+      },
+    ),
+  },
+  // ── 科技 ──
+  {
+    id: 'theme-terminal',
+    name: '终端',
+    category: '科技',
+    config: makeBuiltin(
+      'studio',
+      { barCount: 46, sensitivity: 1.2, smoothing: 0.5, glow: 0.6, roundness: 0.9, colorPrimary: '#00E5A0', colorSecondary: '#7DF9FF', peakCaps: true, reflection: 0.6 },
+      {
+        fx: { ...DEFAULT_CONFIG.fx, enabled: false },
+        title: { ...DEFAULT_CONFIG.title, font: 'sans', color: '#D7FFE9', fontSize: 0.04 },
+        albumArt: { ...DEFAULT_CONFIG.albumArt, shape: 'square', borderColor: '#00E5A0', shadow: 0.4 },
+        bg: { blur: 0.5, brightness: 0.4, saturation: 1.2, vignette: 0.55 },
+      },
+    ),
+  },
+  {
+    id: 'theme-orbit',
+    name: '轨道环',
+    category: '科技',
+    config: makeBuiltin(
+      'radial',
+      { barCount: 96, mirror: true, lineWidth: 2, glow: 0.6, colorPrimary: '#22D3EE', colorSecondary: '#818CF8' },
+      {
+        fx: { enabled: true, particleCount: 40, particleColor: '#22D3EE', particleIntensity: 0.4, haloIntensity: 0.5, haloColor: '#22D3EE' },
+        title: { ...DEFAULT_CONFIG.title, font: 'sans', color: '#CFFAFE', fontSize: 0.04 },
+        albumArt: { ...DEFAULT_CONFIG.albumArt, shape: 'circle', spin: true, spinPeriod: 20, borderColor: '#22D3EE', shadow: 0.5 },
+        bg: { blur: 0.6, brightness: 0.45, saturation: 1.1, vignette: 0.5 },
+      },
+    ),
+  },
+  // ── 高级 ──
+  {
+    id: 'theme-vinyl-night',
+    name: '黑胶之夜',
+    category: '高级',
+    config: makeBuiltin(
+      'radial',
+      { barCount: 72, mirror: true, glow: 0.5, colorPrimary: '#E8C468', colorSecondary: '#8C6A3F' },
+      {
+        fx: { enabled: true, particleCount: 30, particleColor: '#E8C468', particleIntensity: 0.4, haloIntensity: 0.35, haloColor: '#E8C468' },
+        title: { ...DEFAULT_CONFIG.title, font: 'serif', color: '#F0DFC0', fontSize: 0.048 },
+        albumArt: { ...DEFAULT_CONFIG.albumArt, shape: 'circle', spin: true, spinPeriod: 16, beatPulse: true, borderColor: '#E8C468', shadow: 0.8 },
+        bg: { blur: 0.7, brightness: 0.5, saturation: 1.05, vignette: 0.65 },
+      },
+    ),
+  },
+  {
+    id: 'theme-velvet',
+    name: '丝绒',
+    category: '高级',
+    config: makeBuiltin(
+      'waveform',
+      { barCount: 72, lineWidth: 5, mirror: true, glow: 0.5, colorPrimary: '#C94F6D', colorSecondary: '#7A2E4D' },
+      {
+        fx: { enabled: true, particleCount: 40, particleColor: '#C94F6D', particleIntensity: 0.5, haloIntensity: 0.4, haloColor: '#C94F6D' },
+        title: { ...DEFAULT_CONFIG.title, font: 'serif', color: '#F3DDE2', fontSize: 0.044, position: 'bottom' },
+        albumArt: { ...DEFAULT_CONFIG.albumArt, shape: 'rounded', cornerRadius: 0.06, borderColor: '#C94F6D', shadow: 0.7 },
+        bg: { blur: 0.6, brightness: 0.5, saturation: 1.15, vignette: 0.6 },
+      },
+    ),
+  },
+];
+
+export const THEME_CATEGORIES: ThemeCategory[] = ['华丽', '简约', '科技', '高级'];
 
 const STORAGE_KEY = 'wavecraft.customPresets.v1';
 
