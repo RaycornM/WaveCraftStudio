@@ -16,7 +16,7 @@ import {
   saveCustomPreset,
   type NamedPreset,
 } from '@/state/presets';
-import type { TitleAnimation, TitleFont, TitlePosition } from '@/types';
+import type { AlbumArtShape, TitleAnimation, TitleFont, TitlePosition } from '@/types';
 
 /* ---------- 基础小控件 ---------- */
 
@@ -244,6 +244,121 @@ function BackgroundMediaRow() {
   );
 }
 
+/* ---------- 专辑图图层 ---------- */
+
+function AlbumArtSection() {
+  const aa = useStore((s) => s.config.albumArt);
+  const albumArtUrl = useStore((s) => s.session.albumArtUrl);
+  const embeddedCover = useStore((s) => s.session.meta?.embeddedCoverUrl);
+  const { patchAlbumArt, setSession } = useStore.getState();
+
+  const onFile = (f: File) => {
+    if (!f.type.startsWith('image/')) return;
+    void useMediaLibrary
+      .getState()
+      .addMedia('image', f, f.name)
+      .then((item) => setSession({ albumArtUrl: item.objectUrl }));
+  };
+
+  const source = albumArtUrl ? '自定义' : embeddedCover ? '内嵌封面' : '无';
+  return (
+    <>
+      <ToggleRow label="显示专辑图" checked={aa.enabled} onChange={(v) => patchAlbumArt({ enabled: v })} />
+
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] text-[#8a8a93]">图片来源</span>
+          <span
+            className={`rounded px-1.5 py-0.5 text-[10px] ${
+              source === '无' ? 'bg-white/[0.08] text-[#8a8a93]' : 'bg-[#D3FD50]/15 text-[#D3FD50]'
+            }`}
+          >
+            {source}
+          </span>
+        </div>
+        <div className="flex gap-1.5">
+          <label className="flex h-7 flex-1 cursor-pointer items-center justify-center rounded-md border border-white/10 text-[11px] text-[#8a8a93] transition-colors hover:text-[#EBEBEB]">
+            上传专辑图
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = '';
+                if (f) onFile(f);
+              }}
+            />
+          </label>
+          {albumArtUrl && (
+            <button
+              onClick={() => setSession({ albumArtUrl: null })}
+              className="flex h-7 items-center gap-1 rounded-md border border-white/10 px-2 text-[11px] text-[#8a8a93] transition-colors hover:text-red-400"
+            >
+              <Trash2 className="h-3 w-3" />
+              恢复内嵌
+            </button>
+          )}
+        </div>
+      </div>
+
+      <Seg
+        label="形状"
+        value={aa.shape}
+        options={[
+          { v: 'rounded' as AlbumArtShape, label: '圆角' },
+          { v: 'square' as AlbumArtShape, label: '方形' },
+          { v: 'circle' as AlbumArtShape, label: '黑胶' },
+        ]}
+        onChange={(v) => patchAlbumArt({ shape: v })}
+      />
+      {aa.shape === 'rounded' && (
+        <ParamSlider
+          label="圆角半径"
+          value={aa.cornerRadius}
+          min={0}
+          max={0.25}
+          step={0.005}
+          onChange={(v) => patchAlbumArt({ cornerRadius: v })}
+          format={(v) => `${Math.round(v * 100)}%`}
+        />
+      )}
+      <ToggleRow label="旋转动画" checked={aa.spin} onChange={(v) => patchAlbumArt({ spin: v })} />
+      {aa.spin && (
+        <ParamSlider
+          label="旋转周期"
+          value={aa.spinPeriod}
+          min={4}
+          max={30}
+          step={0.5}
+          onChange={(v) => patchAlbumArt({ spinPeriod: v })}
+          format={(v) => `${v.toFixed(1)}s/圈`}
+        />
+      )}
+      <ToggleRow label="节拍脉冲" checked={aa.beatPulse} onChange={(v) => patchAlbumArt({ beatPulse: v })} />
+      <ToggleRow label="内描边" checked={aa.border} onChange={(v) => patchAlbumArt({ border: v })} />
+      {aa.border && <ColorField label="描边颜色" value={aa.borderColor} onChange={(v) => patchAlbumArt({ borderColor: v })} />}
+      <ParamSlider
+        label="投影强度"
+        value={aa.shadow}
+        min={0}
+        max={1}
+        step={0.01}
+        onChange={(v) => patchAlbumArt({ shadow: v })}
+        format={(v) => v.toFixed(2)}
+      />
+      <p className="text-[10px] leading-relaxed text-[#8a8a93]/80">
+        提示：可直接在预览画布上点击专辑图，拖拽移动、拖右下角手柄缩放。
+        {aa.x != null && (
+          <button onClick={() => patchAlbumArt({ x: null, y: null, size: null })} className="ml-1 text-[#D3FD50] hover:underline">
+            复位到模板位置
+          </button>
+        )}
+      </p>
+    </>
+  );
+}
+
 /* ---------- 主面板 ---------- */
 
 export function ControlPanel() {
@@ -327,15 +442,36 @@ export function ControlPanel() {
             className="h-7 rounded-md border border-white/10 bg-transparent px-2 text-[11px] text-[#EBEBEB] outline-none placeholder:text-[#8a8a93]/60 focus:border-[#D3FD50]/50"
           />
           <Seg
-            label="位置"
+            label="位置（模板）"
             value={config.title.position}
             options={[
               { v: 'top' as TitlePosition, label: '上' },
               { v: 'center' as TitlePosition, label: '中' },
               { v: 'bottom' as TitlePosition, label: '下' },
             ]}
-            onChange={(v) => patchTitle({ position: v })}
+            onChange={(v) => patchTitle({ position: v, freeX: null, freeY: null })}
           />
+          <Seg
+            label="对齐"
+            value={config.title.align}
+            options={[
+              { v: 'left' as CanvasTextAlign, label: '左' },
+              { v: 'center' as CanvasTextAlign, label: '中' },
+              { v: 'right' as CanvasTextAlign, label: '右' },
+            ]}
+            onChange={(v) => patchTitle({ align: v })}
+          />
+          <p className="text-[10px] leading-relaxed text-[#8a8a93]/80">
+            提示：可直接在预览画布上点击标题，拖拽移动、拖右下角手柄缩放。
+            {config.title.freeX != null && (
+              <button
+                onClick={() => patchTitle({ freeX: null, freeY: null })}
+                className="ml-1 text-[#D3FD50] hover:underline"
+              >
+                复位到模板位置
+              </button>
+            )}
+          </p>
           <ParamSlider label="字号" value={config.title.fontSize} min={0.02} max={0.09} step={0.001} onChange={(v) => patchTitle({ fontSize: v })} format={(v) => `${Math.round(v * 1080)}px`} />
           <ColorField label="颜色" value={config.title.color} onChange={(v) => patchTitle({ color: v })} />
           <Seg
@@ -368,6 +504,10 @@ export function ControlPanel() {
             format={(v) => (v === 0 ? '全程' : `${v.toFixed(1)}s`)}
           />
           <ParamSlider label="动画时长" value={config.title.animationDuration} min={0.6} max={1} step={0.05} onChange={(v) => patchTitle({ animationDuration: v })} format={(v) => `${v.toFixed(2)}s`} />
+        </Section>
+
+        <Section title="专辑图" defaultOpen>
+          <AlbumArtSection />
         </Section>
 
         <Section title="背景">

@@ -17,9 +17,25 @@ function makeBuiltin(id: PresetId, patch: Partial<VisualConfig['spectrum']>, ext
     spectrum: { ...DEFAULT_CONFIG.spectrum, ...patch },
     fx: { ...DEFAULT_CONFIG.fx, ...extra?.fx },
     title: { ...DEFAULT_CONFIG.title, ...extra?.title },
+    albumArt: { ...DEFAULT_CONFIG.albumArt, ...extra?.albumArt },
     bg: { ...DEFAULT_CONFIG.bg, ...extra?.bg },
     progress: { ...DEFAULT_CONFIG.progress, ...extra?.progress },
     analysis: { ...DEFAULT_CONFIG.analysis, ...extra?.analysis },
+  };
+}
+
+/** 与默认配置深度合并：兼容旧存档/旧 JSON 缺失的新字段 */
+function normalizeConfig(obj: Partial<VisualConfig>): VisualConfig {
+  return {
+    ...DEFAULT_CONFIG,
+    ...obj,
+    spectrum: { ...DEFAULT_CONFIG.spectrum, ...obj.spectrum },
+    fx: { ...DEFAULT_CONFIG.fx, ...obj.fx },
+    title: { ...DEFAULT_CONFIG.title, ...obj.title },
+    albumArt: { ...DEFAULT_CONFIG.albumArt, ...obj.albumArt },
+    bg: { ...DEFAULT_CONFIG.bg, ...obj.bg },
+    progress: { ...DEFAULT_CONFIG.progress, ...obj.progress },
+    analysis: { ...DEFAULT_CONFIG.analysis, ...obj.analysis },
   };
 }
 
@@ -104,6 +120,7 @@ export const BUILTIN_PRESETS: NamedPreset[] = [
   },
 ];
 
+
 const STORAGE_KEY = 'wavecraft.customPresets.v1';
 
 /** 读取我的预设 */
@@ -112,7 +129,9 @@ export function loadCustomPresets(): NamedPreset[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const list = JSON.parse(raw) as NamedPreset[];
-    return Array.isArray(list) ? list.filter((p) => p && p.config) : [];
+    return Array.isArray(list)
+      ? list.filter((p) => p && p.config).map((p) => ({ ...p, config: normalizeConfig(p.config) }))
+      : [];
   } catch {
     return [];
   }
@@ -156,16 +175,7 @@ export function importPresetJson(text: string): VisualConfig | null {
     const obj = JSON.parse(text) as Partial<VisualConfig>;
     if (!obj || typeof obj !== 'object' || !obj.spectrum || !obj.preset) return null;
     // 与默认配置合并，缺失字段自动补齐
-    return {
-      ...DEFAULT_CONFIG,
-      ...obj,
-      spectrum: { ...DEFAULT_CONFIG.spectrum, ...obj.spectrum },
-      fx: { ...DEFAULT_CONFIG.fx, ...obj.fx },
-      title: { ...DEFAULT_CONFIG.title, ...obj.title },
-      bg: { ...DEFAULT_CONFIG.bg, ...obj.bg },
-      progress: { ...DEFAULT_CONFIG.progress, ...obj.progress },
-      analysis: { ...DEFAULT_CONFIG.analysis, ...obj.analysis },
-    };
+    return normalizeConfig(obj);
   } catch {
     return null;
   }

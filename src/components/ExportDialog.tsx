@@ -69,6 +69,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
         config,
         assets: {
           cover: renderAssetsStore.coverImage ?? undefined,
+          albumArt: renderAssetsStore.albumArtImage ?? undefined,
           bgVideo: renderAssetsStore.bgVideo ?? undefined,
           duration: queueDuration,
         },
@@ -90,6 +91,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
         config: exportConfig,
         assets: {
           cover: renderAssetsStore.coverImage ?? undefined,
+          albumArt: renderAssetsStore.albumArtImage ?? undefined,
           bgVideo: renderAssetsStore.bgVideo ?? undefined,
           duration: dur,
           loopPeriod: isLoop ? LOOP_DURATION : undefined,

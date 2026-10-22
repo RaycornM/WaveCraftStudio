@@ -92,6 +92,14 @@ export interface TitleParams {
   title: string;
   artist: string;
   position: TitlePosition;
+  /**
+   * 自由定位锚点（比例坐标 0..1；null = 跟随布局模板 position）。
+   * 用户在预览画布拖拽标题时写入；选择模板位置时重置为 null。
+   */
+  freeX: number | null;
+  freeY: number | null;
+  /** 文本对齐（自由定位时生效；模板模式跟随布局的 titleAlign） */
+  align: CanvasTextAlign;
   /** 字号（相对画布短边的比例，0.01–0.1） */
   fontSize: number;
   color: string;
@@ -106,6 +114,37 @@ export interface TitleParams {
    * 每首曲目段落起点不同，t - startOffset 才是该曲目标题的本地时间。
    */
   startOffset: number;
+}
+
+/** 专辑图形状 */
+export type AlbumArtShape = 'rounded' | 'square' | 'circle';
+
+/**
+ * 专辑图图层参数（独立于背景媒体的一层，可自由摆放）。
+ * x/y/size 为 null 时跟随布局模板的封面区；拖拽后写入自由坐标。
+ */
+export interface AlbumArtParams {
+  enabled: boolean;
+  /** 中心点 x（比例 0..1，相对画布宽） */
+  x: number | null;
+  /** 中心点 y（比例 0..1，相对画布高） */
+  y: number | null;
+  /** 边长（相对画布短边比例 0.05–1.5） */
+  size: number | null;
+  shape: AlbumArtShape;
+  /** 圆角半径（shape=rounded 生效，相对边长 0–0.25） */
+  cornerRadius: number;
+  /** 旋转动画（黑胶模式，circle 形状下最有感觉） */
+  spin: boolean;
+  /** 旋转一圈的秒数 */
+  spinPeriod: number;
+  /** 节拍脉冲缩放 */
+  beatPulse: boolean;
+  /** 内描边 */
+  border: boolean;
+  borderColor: string;
+  /** 投影强度 0..1 */
+  shadow: number;
 }
 
 /** 背景参数 */
@@ -142,6 +181,7 @@ export interface VisualConfig {
   spectrum: SpectrumParams;
   fx: FxParams;
   title: TitleParams;
+  albumArt: AlbumArtParams;
   bg: BgParams;
   progress: ProgressParams;
   analysis: AnalysisParams;
@@ -158,8 +198,10 @@ export interface TrackMeta {
 
 /** 渲染资产（预览与导出共用） */
 export interface RenderAssets {
-  /** 用户上传或内嵌封面图 */
+  /** 用户上传或内嵌封面图（用作模糊背景） */
   cover?: HTMLImageElement;
+  /** 专辑图图层（独立前景元素；缺省回退到内嵌封面） */
+  albumArt?: HTMLImageElement;
   /** 背景视频（与图片互斥；设置后替代图片背景与前景封面） */
   bgVideo?: HTMLVideoElement;
   /** 总时长（秒） */

@@ -319,7 +319,7 @@ export async function encodeTimeline(opts: EncodeTimelineOpts, signal: AbortSign
         ...config,
         title: { ...config.title, title: seg.title, artist: seg.artist, startOffset: seg.start },
       };
-      if (seg.cover) frameAssets = { ...renderAssets, cover: seg.cover };
+      if (seg.cover) frameAssets = { ...renderAssets, albumArt: seg.cover }; // 每首曲目切自己的专辑图，背景保持统一
       if (segIdx !== lastSegIdx) lastSegIdx = segIdx;
     }
 

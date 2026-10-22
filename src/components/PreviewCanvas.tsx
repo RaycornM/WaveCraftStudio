@@ -9,11 +9,13 @@ import { useStore } from '@/state/store';
 import { renderAssetsStore } from '@/state/assets';
 import { syncVideoPlayback } from '@/state/bgVideo';
 import { usePlayback } from '@/state/playback';
+import { LayerOverlay } from './LayerOverlay';
 import type { AudioFrameData } from '@/types';
 
 export function PreviewCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const layout = useStore((s) => s.config.layout);
 
   // 画布尺寸随容器与布局等比缩放
@@ -107,6 +109,7 @@ export function PreviewCanvas() {
 
       renderFrame(ctx, t, frame, config, {
         cover: renderAssetsStore.coverImage ?? undefined,
+        albumArt: renderAssetsStore.albumArtImage ?? undefined,
         bgVideo: bgVideo ?? undefined,
         duration: hasAudio ? engine.duration : 0,
       });
@@ -127,10 +130,13 @@ export function PreviewCanvas() {
 
   return (
     <div ref={containerRef} className="flex h-full w-full items-center justify-center overflow-hidden">
-      <canvas
-        ref={canvasRef}
-        className="rounded-md shadow-[0_8px_60px_rgba(0,0,0,0.6)] ring-1 ring-white/10"
-      />
+      <div ref={wrapRef} className="relative">
+        <canvas
+          ref={canvasRef}
+          className="block rounded-md shadow-[0_8px_60px_rgba(0,0,0,0.6)] ring-1 ring-white/10"
+        />
+        <LayerOverlay wrapRef={wrapRef} />
+      </div>
     </div>
   );
 }

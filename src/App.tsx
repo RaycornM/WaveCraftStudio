@@ -61,6 +61,7 @@ export default function App() {
         duration: buffer.duration,
         fileName: file.name,
         meta,
+        albumArtUrl: null, // 新曲目回到“自动使用内嵌封面”
         exportSettings: { ...useStore.getState().session.exportSettings, loopStart: 0, trimStart: 0, trimEnd: 0 },
       });
       // 用户未传图时使用内嵌封面
@@ -124,6 +125,7 @@ export default function App() {
         fileName: item.name,
         meta: { title, artist, album: '', embeddedCoverUrl: item.embeddedCoverUrl },
         currentAudioId: item.id,
+        albumArtUrl: null,
         exportSettings: { ...useStore.getState().session.exportSettings, loopStart: 0, trimStart: 0, trimEnd: 0 },
       });
       if (item.embeddedCoverUrl && !useStore.getState().session.coverUrl) {
@@ -187,16 +189,19 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queuePreview]);
 
-  // 连播切歌：标题/艺术家随曲目切换，startOffset 让标题动画每首重新入场
+  // 连播切歌：标题/艺术家随曲目切换，startOffset 让标题动画每首重新入场；
+  // 专辑图在“自动”模式（albumArtUrl 为 null）下跟随当前曲目的内嵌封面
   useEffect(() => {
     audioEngine.onQueueTrackChange = (_index, startOffset, track) => {
       const st = useStore.getState();
-      st.patchTitle({
-        title: track.title || track.name.replace(/\.[a-z0-9]+$/i, ''),
-        artist: track.artist,
-        startOffset,
+      const title = track.title || track.name.replace(/\.[a-z0-9]+$/i, '');
+      const item = useMediaLibrary.getState().items.find((i) => i.id === track.id);
+      st.patchTitle({ title, artist: track.artist, startOffset });
+      st.setSession({
+        fileName: track.name,
+        currentAudioId: track.id,
+        meta: { title, artist: track.artist, album: '', embeddedCoverUrl: item?.embeddedCoverUrl },
       });
-      st.setSession({ fileName: track.name, currentAudioId: track.id });
     };
     return () => {
       audioEngine.onQueueTrackChange = null;
@@ -221,6 +226,28 @@ export default function App() {
       cancelled = true;
     };
   }, [coverUrl]);
+
+  // 专辑图 URL（自定义上传优先，否则自动用内嵌封面）→ HTMLImageElement（渲染循环直接读取）
+  const albumArtUrl = useStore((s) => s.session.albumArtUrl);
+  const embeddedCoverUrl = useStore((s) => s.session.meta?.embeddedCoverUrl);
+  useEffect(() => {
+    const url = albumArtUrl ?? embeddedCoverUrl ?? null;
+    if (!url) {
+      renderAssetsStore.albumArtImage = null;
+      return;
+    }
+    let cancelled = false;
+    loadImage(url)
+      .then((img) => {
+        if (!cancelled) renderAssetsStore.albumArtImage = img;
+      })
+      .catch(() => {
+        renderAssetsStore.albumArtImage = null;
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [albumArtUrl, embeddedCoverUrl]);
 
   // 背景视频 URL → HTMLVideoElement
   const bgVideoUrl = useStore((s) => s.session.bgVideoUrl);

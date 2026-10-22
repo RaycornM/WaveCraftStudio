@@ -1,8 +1,9 @@
 // 统一渲染入口：预览与导出共用的同一个 renderFrame。
-// 叠层顺序：模糊垫底背景 → 清晰封面 → 频谱主层 → 粒子光晕层(lighter) → 标题/进度条
+// 叠层顺序：模糊垫底背景 → 专辑图图层 → 频谱主层 → 粒子光晕层(lighter) → 标题/进度条
 import type { AudioFrameData, RenderAssets, VisualConfig } from '@/types';
 import { LAYOUTS } from './layouts';
-import { drawBackground, drawCover, drawVideoBackground } from './background';
+import { drawBackground, drawVideoBackground } from './background';
+import { drawAlbumArt } from './albumArt';
 import { drawBarSpectrum } from './presets/barSpectrum';
 import { drawRadialSpectrum } from './presets/radialSpectrum';
 import { drawWaveform } from './presets/waveform';
@@ -36,13 +37,15 @@ export function renderFrame(
     drawBackground(ctx, w, h, assets.cover, config.bg);
   }
 
-  // 2. 清晰封面（视频背景模式下不画前景封面，让视频成为视觉主体）
-  const coverX = layout.cover.x * w;
-  const coverY = layout.cover.y * h;
-  const coverW = layout.cover.w * w;
-  const coverH = layout.cover.h * h;
-  if (assets.cover && !hasVideo) {
-    drawCover(ctx, assets.cover, coverX, coverY, coverW, coverH, audioData.beat);
+  // 2. 专辑图图层（独立前景元素：自由定位/形状/旋转；x/y/size 为 null 时跟随布局模板封面区）
+  const art = assets.albumArt;
+  const artVisible = !!art && config.albumArt.enabled;
+  if (artVisible) {
+    const artCx = (config.albumArt.x ?? layout.cover.x + layout.cover.w / 2) * w;
+    const artCy = (config.albumArt.y ?? layout.cover.y + layout.cover.h / 2) * h;
+    const templateSize = Math.min(layout.cover.w * w, layout.cover.h * h);
+    const artSize = config.albumArt.size != null ? config.albumArt.size * shortSide : templateSize;
+    drawAlbumArt(ctx, art!, config.albumArt, artCx, artCy, artSize, t, audioData.beat, loopPeriod);
   }
 
   // 3. 频谱主层（用户缩放/偏移叠加在布局基准区域上，save/restore 不影响其他层）
@@ -68,7 +71,7 @@ export function renderFrame(
         config.spectrum,
         layout.radialCenter.x * w,
         layout.radialCenter.y * h,
-        layout.radialRadius * shortSide * (assets.cover ? 1 : 0.7),
+        layout.radialRadius * shortSide * (artVisible ? 1 : 0.7),
         scale,
         loopPeriod,
       );
@@ -102,17 +105,23 @@ export function renderFrame(
     loopPeriod,
   );
 
-  // 5. 标题（位置参数在布局基准 y 上微调）
-  const titleOffset = config.title.position === 'top' ? -0.06 : config.title.position === 'bottom' ? 0.07 : 0;
-  const titleY = Math.min(0.95, Math.max(0.06, layout.titleY + titleOffset)) * h;
+  // 5. 标题（自由定位优先；否则按布局模板 + position 微调）
+  const titleCfg = config.title;
+  const freePos = titleCfg.freeX != null && titleCfg.freeY != null;
+  const titleOffset = titleCfg.position === 'top' ? -0.06 : titleCfg.position === 'bottom' ? 0.07 : 0;
+  const titleX = freePos ? titleCfg.freeX! * w : layout.titleX * w;
+  const titleY = freePos
+    ? titleCfg.freeY! * h
+    : Math.min(0.95, Math.max(0.06, layout.titleY + titleOffset)) * h;
+  const titleAlign = freePos ? titleCfg.align : layout.titleAlign;
   drawTitle(
     ctx,
-    config.title,
+    titleCfg,
     t,
-    layout.titleX * w,
+    titleX,
     titleY,
-    w * (layout.titleAlign === 'left' ? 0.48 : 0.86),
-    layout.titleAlign,
+    w * (titleAlign === 'left' ? 0.48 : 0.86),
+    titleAlign,
     shortSide,
     audioData.beat,
   );

@@ -1,9 +1,11 @@
-// 渲染资产单例：封面图 / 背景视频（rAF 渲染循环直接读取，不走 React 状态）
+// 渲染资产单例：背景封面图 / 专辑图 / 背景视频（rAF 渲染循环直接读取，不走 React 状态）
 export const renderAssetsStore: {
   coverImage: HTMLImageElement | null;
+  albumArtImage: HTMLImageElement | null;
   bgVideo: HTMLVideoElement | null;
 } = {
   coverImage: null,
+  albumArtImage: null,
   bgVideo: null,
 };
 
