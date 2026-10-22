@@ -1,13 +1,11 @@
 // 媒体库抽屉：左侧可收起面板，集中管理上传过的素材
 // 三个标签页：音频 / 封面（图片）/ 背景（视频）；点击条目设为当前素材；
-// 音频可加入拼接队列（有序，支持上移/下移/移除），队列连播开关驱动需求 4 预览。
+// 音频条目的 + 加入播放列表；队列的排序/跳播/连播由底部 PlaylistBar 接管。
 import { useMemo, useState } from 'react';
 import {
   Check,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
   Film,
   Image as ImageIcon,
   Library,
@@ -15,7 +13,6 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
 import { formatTime } from '@/render/progressBar';
 import { useMediaLibrary, type MediaItem } from '@/state/mediaLibrary';
 import { useStore } from '@/state/store';
@@ -46,9 +43,7 @@ export function MediaLibrary({ onSelectAudio, onSelectBg }: Props) {
   const [tab, setTab] = useState<TabId>('audio');
   const items = useMediaLibrary((s) => s.items);
   const playlist = useMediaLibrary((s) => s.playlist);
-  const queuePreview = useMediaLibrary((s) => s.queuePreview);
-  const { removeMedia, addToPlaylist, removeFromPlaylist, moveInPlaylist, setQueuePreview } =
-    useMediaLibrary.getState();
+  const { removeMedia, addToPlaylist } = useMediaLibrary.getState();
   const currentAudioId = useStore((s) => s.session.currentAudioId);
   const currentBgId = useStore((s) => s.session.currentBgId);
   const setSession = useStore((s) => s.setSession);
@@ -61,11 +56,6 @@ export function MediaLibrary({ onSelectAudio, onSelectBg }: Props) {
     }),
     [items],
   );
-  const queueItems = useMemo(
-    () => playlist.map((id) => items.find((i) => i.id === id)).filter((i): i is MediaItem => !!i),
-    [playlist, items],
-  );
-  const queueDuration = queueItems.reduce((acc, i) => acc + (i.duration ?? 0), 0);
 
   /** 删除条目：若删除的是当前使用中的素材，同步清掉会话引用 */
   const handleRemove = (item: MediaItem) => {
@@ -206,72 +196,12 @@ export function MediaLibrary({ onSelectAudio, onSelectBg }: Props) {
         })}
       </div>
 
-      {/* 拼接队列（音频标签页底部） */}
-      {tab === 'audio' && (
-        <div className="flex max-h-[45%] shrink-0 flex-col border-t border-white/[0.08]">
-          <div className="flex items-center justify-between px-3 pt-2.5">
-            <span className="text-[11px] font-medium text-[#EBEBEB]">
-              拼接队列
-              {queueItems.length > 0 && (
-                <span className="ml-1.5 text-[10px] font-normal tabular-nums text-[#8a8a93]">
-                  {queueItems.length} 首 · {formatTime(queueDuration)}
-                </span>
-              )}
-            </span>
-            <label className="flex items-center gap-1.5 text-[10px] text-[#8a8a93]">
-              连播
-              <Switch
-                checked={queuePreview}
-                disabled={queueItems.length === 0}
-                onCheckedChange={setQueuePreview}
-              />
-            </label>
-          </div>
-          <div className="flex min-h-0 flex-col gap-0.5 overflow-y-auto p-2">
-            {queueItems.length === 0 && (
-              <p className="px-1 pb-1.5 text-[10px] leading-relaxed text-[#8a8a93]">
-                点音频条目的 + 加入队列；开启连播可多首连放，导出时可选拼接模式。
-              </p>
-            )}
-            {queueItems.map((item, idx) => (
-              <div
-                key={item.id}
-                className="group flex items-center gap-1.5 rounded-md px-1.5 py-1 transition-colors duration-200 hover:bg-white/[0.04]"
-              >
-                <span className="w-4 shrink-0 text-center font-mono text-[10px] tabular-nums text-[#8a8a93]">
-                  {idx + 1}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-[11px] text-[#EBEBEB]">
-                  {item.meta?.title || item.name}
-                </span>
-                <span className="flex shrink-0 items-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                  <button
-                    onClick={() => moveInPlaylist(item.id, -1)}
-                    disabled={idx === 0}
-                    title="上移"
-                    className="flex h-5 w-5 items-center justify-center rounded text-[#8a8a93] transition-colors duration-200 hover:text-[#EBEBEB] disabled:opacity-25"
-                  >
-                    <ChevronUp className="h-3 w-3" />
-                  </button>
-                  <button
-                    onClick={() => moveInPlaylist(item.id, 1)}
-                    disabled={idx === queueItems.length - 1}
-                    title="下移"
-                    className="flex h-5 w-5 items-center justify-center rounded text-[#8a8a93] transition-colors duration-200 hover:text-[#EBEBEB] disabled:opacity-25"
-                  >
-                    <ChevronDown className="h-3 w-3" />
-                  </button>
-                  <button
-                    onClick={() => removeFromPlaylist(item.id)}
-                    title="移出队列"
-                    className="flex h-5 w-5 items-center justify-center rounded text-[#8a8a93] transition-colors duration-200 hover:text-red-400"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </span>
-              </div>
-            ))}
-          </div>
+      {/* 音频标签页底部提示：播放列表由底部轨道条管理 */}
+      {tab === 'audio' && playlist.length > 0 && (
+        <div className="shrink-0 border-t border-white/[0.08] px-3 py-2.5">
+          <p className="text-[10px] leading-relaxed text-[#8a8a93]">
+            播放列表 {playlist.length} 首 · 在底部轨道条拖拽排序、点击跳播、开启连播。
+          </p>
         </div>
       )}
     </div>

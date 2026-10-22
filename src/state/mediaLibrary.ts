@@ -35,6 +35,7 @@ interface MediaLibraryState {
   addToPlaylist: (id: string) => void;
   removeFromPlaylist: (id: string) => void;
   moveInPlaylist: (id: string, dir: -1 | 1) => void;
+  moveInPlaylistTo: (id: string, toIndex: number) => void;
   setQueuePreview: (v: boolean) => void;
 }
 
@@ -169,6 +170,17 @@ export const useMediaLibrary = create<MediaLibraryState>((set, get) => ({
       if (idx < 0 || to < 0 || to >= s.playlist.length) return s;
       const next = [...s.playlist];
       [next[idx], next[to]] = [next[to], next[idx]];
+      return { playlist: next };
+    }),
+  /** 拖拽排序：把 id 移动到目标下标 */
+  moveInPlaylistTo: (id, toIndex) =>
+    set((s) => {
+      const from = s.playlist.indexOf(id);
+      const to = Math.max(0, Math.min(s.playlist.length - 1, toIndex));
+      if (from < 0 || from === to) return s;
+      const next = [...s.playlist];
+      next.splice(from, 1);
+      next.splice(to, 0, id);
       return { playlist: next };
     }),
   setQueuePreview: (v) => set({ queuePreview: v }),

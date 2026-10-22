@@ -120,6 +120,15 @@ export class AudioEngine {
     };
   }
 
+  /** 连播中跳转到第 index 首从头播放（复用已解码 buffer，不重建队列） */
+  seekQueueTrack(index: number) {
+    const q = this.queue;
+    if (!q || index < 0 || index >= q.tracks.length) return;
+    q.pausedT = q.offsets[index];
+    this.onQueueTrackChange?.(index, q.offsets[index], q.tracks[index]);
+    this.playQueueIndex(index, 0);
+  }
+
   /** 播放队列中第 index 首的 offset 秒处 */
   private playQueueIndex(index: number, offset: number) {
     const q = this.queue;

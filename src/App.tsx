@@ -8,6 +8,7 @@ import { TrackInfo } from '@/components/TrackInfo';
 import { TransportBar } from '@/components/TransportBar';
 import { ControlPanel } from '@/components/ControlPanel';
 import { MediaLibrary } from '@/components/MediaLibrary';
+import { PlaylistBar } from '@/components/PlaylistBar';
 import { audioEngine } from '@/audio/AudioEngine';
 import { extractMetadata } from '@/audio/metadata';
 import { checkEncoderSupport } from '@/export/exporter';
@@ -145,6 +146,18 @@ export default function App() {
       useStore.getState().setSession({ coverUrl: item.objectUrl, bgVideoUrl: null, currentBgId: item.id });
     }
   }, []);
+
+  /** 播放列表点击曲目：连播中跳播该首（复用已解码 buffer）；单曲模式加载为当前曲目 */
+  const onJumpToTrack = useCallback(
+    (item: MediaItem, index: number) => {
+      if (useMediaLibrary.getState().queuePreview && audioEngine.queueActive && index >= 0) {
+        audioEngine.seekQueueTrack(index); // onQueueTrackChange 回调会同步标题/专辑图/会话
+        return;
+      }
+      onSelectAudio(item);
+    },
+    [onSelectAudio],
+  );
 
   // 队列连播开关：进入时快照当前播放列表逐首连播；退出时回到单曲模式
   const queuePreview = useMediaLibrary((s) => s.queuePreview);
@@ -350,6 +363,7 @@ export default function App() {
         <ControlPanel />
       </div>
 
+      <PlaylistBar onJump={onJumpToTrack} />
       <TransportBar />
     </div>
   );
